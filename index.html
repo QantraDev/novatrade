@@ -1,22 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>NovaTrade</title>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
 
 <style>
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial;
-}
-
 body{
+margin:0;
+font-family:Arial;
 background:#0b1020;
 color:white;
 }
@@ -24,121 +22,165 @@ color:white;
 /* HEADER */
 
 header{
+
 display:flex;
 justify-content:space-between;
 align-items:center;
-padding:15px 30px;
+padding:15px 25px;
 background:#050a1c;
 border-bottom:1px solid #1f2937;
+
 }
 
 .logo{
-font-size:24px;
+
+font-size:26px;
 font-weight:bold;
 color:#22c55e;
+
 }
 
 .balance{
+
 font-size:18px;
+
 }
 
-/* LAYOUT */
+/* MAIN */
 
-.container{
+.main{
+
 display:flex;
-height:calc(100vh - 60px);
+height:calc(100vh - 70px);
+
 }
 
 /* CHART */
 
-.chart-section{
+.chart-area{
+
 flex:3;
-padding:20px;
+padding:15px;
+
 }
 
 #chart{
+
 height:100%;
+
 }
 
-/* TRADE PANEL */
+/* PANEL */
 
-.trade-panel{
+.panel{
+
 flex:1;
 background:#050a1c;
 border-left:1px solid #1f2937;
 padding:20px;
 display:flex;
 flex-direction:column;
+
 }
 
-.trade-panel h2{
+.panel h2{
+
 margin-bottom:20px;
+
 }
+
+/* INPUT */
 
 .input{
+
 width:100%;
 padding:12px;
-margin-bottom:15px;
 font-size:18px;
 background:#0b1020;
 border:1px solid #1f2937;
 color:white;
+margin-bottom:15px;
+
 }
 
 /* BUTTONS */
 
 .btn{
+
 padding:15px;
 font-size:18px;
 border:none;
 cursor:pointer;
 margin-bottom:10px;
+
 }
 
 .buy{
+
 background:#16a34a;
-color:white;
+
 }
 
 .sell{
+
 background:#dc2626;
-color:white;
+
 }
 
 /* HISTORY */
 
 .history{
-margin-top:30px;
+
+margin-top:25px;
 flex:1;
 overflow:auto;
+
 }
 
 .history-item{
+
 padding:10px;
 border-bottom:1px solid #1f2937;
-font-size:14px;
+
 }
 
 .green{
+
 color:#22c55e;
+
 }
 
 .red{
+
 color:#ef4444;
+
 }
 
-/* SYMBOL SELECT */
+/* SYMBOL */
 
-.symbols{
-margin-bottom:15px;
-padding:10px;
+.symbol-select{
+
 width:100%;
+padding:10px;
+margin-bottom:15px;
 background:#0b1020;
-color:white;
 border:1px solid #1f2937;
+color:white;
+
+}
+
+/* TIME */
+
+.time{
+
+margin-top:15px;
+font-size:14px;
+color:#9ca3af;
+
 }
 
 </style>
+
 </head>
 
 <body>
@@ -147,19 +189,21 @@ border:1px solid #1f2937;
 
 <div class="logo">NovaTrade</div>
 
-<div class="balance">
+<div>
+
 Balance: $<span id="balance">10000</span>
+
 </div>
 
 </header>
 
-<div class="container">
+<div class="main">
 
 <!-- CHART -->
 
-<div class="chart-section">
+<div class="chart-area">
 
-<select class="symbols" id="symbolSelect" onchange="changeSymbol()">
+<select id="symbol" class="symbol-select" onchange="changeSymbol()">
 
 <option value="BINANCE:BTCUSDT">BTC / USDT</option>
 <option value="BINANCE:ETHUSDT">ETH / USDT</option>
@@ -174,15 +218,17 @@ Balance: $<span id="balance">10000</span>
 
 <!-- TRADE PANEL -->
 
-<div class="trade-panel">
+<div class="panel">
 
 <h2>Trade</h2>
 
-<input class="input" id="amount" type="number" value="100">
+<input type="number" id="amount" class="input" value="100">
 
-<button class="btn buy" onclick="buyTrade()">BUY</button>
+<button class="btn buy" onclick="buy()">BUY</button>
 
-<button class="btn sell" onclick="sellTrade()">SELL</button>
+<button class="btn sell" onclick="sell()">SELL</button>
+
+<div class="time" id="time"></div>
 
 <div class="history" id="history">
 
@@ -226,19 +272,21 @@ loadChart("BINANCE:BTCUSDT")
 
 function changeSymbol(){
 
-let symbol = document.getElementById("symbolSelect").value
+let s = document.getElementById("symbol").value
 
-loadChart(symbol)
+loadChart(s)
 
 }
 
-function buyTrade(){
+/* BUY */
+
+function buy(){
 
 let amount = Number(document.getElementById("amount").value)
 
-if(amount>balance){
+if(amount > balance){
 
-alert("Not enough balance")
+alert("Balance not enough")
 
 return
 
@@ -252,7 +300,9 @@ addHistory("BUY",amount)
 
 }
 
-function sellTrade(){
+/* SELL */
+
+function sell(){
 
 let amount = Number(document.getElementById("amount").value)
 
@@ -264,29 +314,47 @@ addHistory("SELL",amount)
 
 }
 
+/* BALANCE */
+
 function updateBalance(){
 
 document.getElementById("balance").innerText = balance.toFixed(2)
 
 }
 
+/* HISTORY */
+
 function addHistory(type,amount){
 
 let history = document.getElementById("history")
 
-let item = document.createElement("div")
+let div = document.createElement("div")
 
-item.className="history-item"
+div.className="history-item"
 
 let color = type=="BUY" ? "green" : "red"
 
-item.innerHTML = `<span class="${color}">${type}</span> $${amount}`
+div.innerHTML = `<span class="${color}">${type}</span> $${amount}`
 
-history.appendChild(item)
+history.appendChild(div)
 
 }
+
+/* CLOCK */
+
+function updateTime(){
+
+let now = new Date()
+
+document.getElementById("time").innerText =
+"Server Time: " + now.toLocaleTimeString()
+
+}
+
+setInterval(updateTime,1000)
 
 </script>
 
 </body>
+
 </html>

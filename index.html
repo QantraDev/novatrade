@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>NovaTrade Demo</title>
+<title>NovaTrade</title>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
 
@@ -14,9 +12,9 @@
 
 body{
 margin:0;
+font-family:Arial;
 background:#0f172a;
 color:white;
-font-family:Arial;
 }
 
 header{
@@ -25,80 +23,100 @@ padding:15px;
 display:flex;
 justify-content:space-between;
 align-items:center;
+border-bottom:1px solid #1e293b;
 }
 
 .logo{
-font-size:22px;
+font-size:20px;
 font-weight:bold;
-color:#22c55e;
+color:#38bdf8;
 }
 
 .balance{
-font-size:18px;
+background:#1e293b;
+padding:8px 14px;
+border-radius:6px;
 }
 
 .container{
 display:flex;
-height:90vh;
+height:calc(100vh - 60px);
 }
 
 .chart-area{
 flex:3;
-padding:10px;
-}
-
-#chart{
-width:100%;
-height:100%;
 }
 
 .trade-panel{
 flex:1;
 background:#020617;
 padding:20px;
+border-left:1px solid #1e293b;
 }
 
-input{
+label{
+display:block;
+margin-top:15px;
+margin-bottom:5px;
+}
+
+input,select{
 width:100%;
 padding:10px;
-font-size:16px;
-margin-bottom:15px;
-text-align:center;
+border:none;
+border-radius:6px;
+background:#1e293b;
+color:white;
 }
 
 button{
 width:100%;
-padding:15px;
-font-size:18px;
+padding:14px;
+margin-top:15px;
+font-size:16px;
 border:none;
-margin-bottom:10px;
+border-radius:6px;
 cursor:pointer;
 }
 
 .buy{
 background:#16a34a;
-color:white;
 }
 
 .sell{
 background:#dc2626;
-color:white;
 }
 
 .history{
 margin-top:20px;
-height:250px;
-overflow:auto;
 font-size:14px;
 }
 
 .trade-item{
-padding:5px;
-border-bottom:1px solid #1e293b;
+background:#1e293b;
+padding:8px;
+margin-top:5px;
+border-radius:5px;
+}
+
+@media (max-width:900px){
+
+.container{
+flex-direction:column;
+height:auto;
+}
+
+.chart-area{
+height:60vh;
+}
+
+.trade-panel{
+width:100%;
+}
+
 }
 
 </style>
-
 </head>
 
 <body>
@@ -107,8 +125,8 @@ border-bottom:1px solid #1e293b;
 
 <div class="logo">NovaTrade</div>
 
-<div class="balance" id="balance">
-Balance: $10000
+<div class="balance">
+Balance: $<span id="balance">1000</span>
 </div>
 
 </header>
@@ -116,26 +134,48 @@ Balance: $10000
 <div class="container">
 
 <div class="chart-area">
-<div id="chart"></div>
+
+<div id="tradingview_chart" style="height:100%;"></div>
+
 </div>
 
 <div class="trade-panel">
 
-<h3>Trade</h3>
+<label>Asset</label>
 
-<input id="amount" value="100">
+<select id="asset">
+<option>BTCUSDT</option>
+<option>ETHUSDT</option>
+<option>EURUSD</option>
+<option>GBPUSD</option>
+</select>
 
-<button class="buy" onclick="buy()">
-BUY
+<label>Amount ($)</label>
+
+<input type="number" id="amount" value="10">
+
+<label>Time</label>
+
+<select id="time">
+<option value="5">5 sec</option>
+<option value="10">10 sec</option>
+<option value="30">30 sec</option>
+<option value="60">1 min</option>
+</select>
+
+<button class="buy" onclick="trade('buy')">
+BUY ↑
 </button>
 
-<button class="sell" onclick="sell()">
-SELL
+<button class="sell" onclick="trade('sell')">
+SELL ↓
 </button>
 
-<h3>Trade History</h3>
+<div class="history" id="history">
 
-<div class="history" id="history"></div>
+Trade History
+
+</div>
 
 </div>
 
@@ -143,88 +183,67 @@ SELL
 
 <script>
 
-let balance = 10000
+new TradingView.widget({
+"width": "100%",
+"height": "100%",
+"symbol": "BINANCE:BTCUSDT",
+"interval": "1",
+"timezone": "Etc/UTC",
+"theme": "dark",
+"style": "1",
+"locale": "en",
+"toolbar_bg": "#0f172a",
+"container_id": "tradingview_chart"
+});
 
-function updateBalance(){
+let balance = 1000;
 
-document.getElementById("balance").innerText =
-"Balance: $" + balance
+function trade(type){
 
-}
-
-function addHistory(text){
-
-let div = document.createElement("div")
-
-div.className = "trade-item"
-
-div.innerText = text
-
-document.getElementById("history").prepend(div)
-
-}
-
-function buy(){
-
-let amount = Number(document.getElementById("amount").value)
+let amount = parseFloat(document.getElementById("amount").value);
+let time = document.getElementById("time").value;
 
 if(amount > balance){
-alert("Not enough balance")
-return
+alert("Not enough balance");
+return;
 }
 
-balance -= amount
+balance -= amount;
 
-updateBalance()
+document.getElementById("balance").innerText = balance;
 
-addHistory("BUY $" + amount)
+let item = document.createElement("div");
+item.className="trade-item";
+
+item.innerText = type.toUpperCase()+" $"+amount+" ("+time+"s)";
+
+document.getElementById("history").appendChild(item);
+
+setTimeout(()=>{
+
+let win = Math.random() > 0.5;
+
+if(win){
+
+let profit = amount * 1.8;
+
+balance += profit;
+
+alert("WIN +$"+profit);
+
+}else{
+
+alert("LOSE -$"+amount);
 
 }
 
-function sell(){
+document.getElementById("balance").innerText = balance;
 
-let amount = Number(document.getElementById("amount").value)
-
-balance += amount
-
-updateBalance()
-
-addHistory("SELL $" + amount)
+}, time*1000);
 
 }
-
-new TradingView.widget({
-
-container_id: "chart",
-
-width: "100%",
-
-height: "100%",
-
-symbol: "BINANCE:BTCUSDT",
-
-interval: "1",
-
-timezone: "Etc/UTC",
-
-theme: "dark",
-
-style: "1",
-
-locale: "en",
-
-toolbar_bg: "#0f172a",
-
-enable_publishing: false,
-
-hide_side_toolbar: false,
-
-allow_symbol_change: true
-
-})
 
 </script>
 
 </body>
-
 </html>

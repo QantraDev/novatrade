@@ -19,91 +19,62 @@ margin:auto;
 }
 
 button{
-padding:12px 25px;
-font-size:16px;
-margin:8px;
+padding:15px 30px;
+font-size:18px;
+margin:10px;
 border:none;
 cursor:pointer;
 }
 
-.buy{background:green;color:white;}
-.sell{background:red;color:white;}
-.deposit{background:#2563eb;color:white;}
-.withdraw{background:#f59e0b;color:white;}
+.buy{
+background:#16a34a;
+color:white;
+}
+
+.sell{
+background:#dc2626;
+color:white;
+}
 
 input{
 padding:10px;
-margin:5px;
+font-size:16px;
+margin:10px;
+}
+
+#history{
+margin-top:20px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="login">
+<h1>NovaTrade Demo</h1>
 
-<h2>NovaTrade Login</h2>
-
-<input id="user" placeholder="Username"><br>
-<input id="pass" type="password" placeholder="Password"><br>
-
-<button onclick="register()">Register</button>
-<button onclick="login()">Login</button>
-
-</div>
-
-<div id="app" style="display:none;">
-
-<h1>NovaTrade</h1>
 <h2 id="balance">Balance: $10000</h2>
 
 <div id="chart"></div>
 
-<button class="buy" onclick="buy()">BUY</button>
-<button class="sell" onclick="sell()">SELL</button>
+<br>
+
+<input id="amount" placeholder="Trade Amount $" />
 
 <br>
 
-<button class="deposit" onclick="deposit()">Deposit</button>
-<button class="withdraw" onclick="withdraw()">Withdraw</button>
+<button class="buy" onclick="buy()">BUY</button>
+<button class="sell" onclick="sell()">SELL</button>
 
-</div>
+<h3>Trade History</h3>
+<div id="history"></div>
 
 <script>
 
 let balance = 10000
 
-function register(){
-let u = document.getElementById("user").value
-let p = document.getElementById("pass").value
-
-localStorage.setItem("user",u)
-localStorage.setItem("pass",p)
-
-alert("Account created")
+function updateBalance(){
+document.getElementById("balance").innerHTML = "Balance: $" + balance
 }
-
-function login(){
-
-let u = document.getElementById("user").value
-let p = document.getElementById("pass").value
-
-if(u==localStorage.getItem("user") && p==localStorage.getItem("pass")){
-
-document.getElementById("login").style.display="none"
-document.getElementById("app").style.display="block"
-
-loadChart()
-
-}else{
-
-alert("Wrong login")
-
-}
-
-}
-
-function loadChart(){
 
 new TradingView.widget({
 "container_id": "chart",
@@ -111,37 +82,39 @@ new TradingView.widget({
 "height": 500,
 "symbol": "BINANCE:BTCUSDT",
 "interval": "1",
-"theme": "dark"
+"theme": "dark",
+"style": "1",
+"locale": "en"
 })
 
-}
-
-function updateBalance(){
-document.getElementById("balance").innerText="Balance: $"+balance
-}
-
 function buy(){
-balance -= 100
+
+let amount = document.getElementById("amount").value
+
+if(amount == "") return
+
+balance -= amount
+
 updateBalance()
-alert("Buy order executed")
+
+document.getElementById("history").innerHTML +=
+"<p>BUY $" + amount + "</p>"
+
 }
 
 function sell(){
-balance += 100
-updateBalance()
-alert("Sell order executed")
-}
 
-function deposit(){
-balance += 500
-updateBalance()
-alert("Deposit successful")
-}
+let amount = document.getElementById("amount").value
 
-function withdraw(){
-balance -= 500
+if(amount == "") return
+
+balance += amount
+
 updateBalance()
-alert("Withdraw successful")
+
+document.getElementById("history").innerHTML +=
+"<p>SELL $" + amount + "</p>"
+
 }
 
 </script>

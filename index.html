@@ -3,117 +3,139 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>NovaTrade</title>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
 
 <style>
 
-body{
+*{
 margin:0;
+padding:0;
+box-sizing:border-box;
 font-family:Arial;
-background:#0f172a;
+}
+
+body{
+background:#0b1020;
 color:white;
 }
 
+/* HEADER */
+
 header{
-background:#020617;
-padding:15px;
 display:flex;
 justify-content:space-between;
 align-items:center;
-border-bottom:1px solid #1e293b;
+padding:15px 30px;
+background:#050a1c;
+border-bottom:1px solid #1f2937;
 }
 
 .logo{
-font-size:20px;
+font-size:24px;
 font-weight:bold;
-color:#38bdf8;
+color:#22c55e;
 }
 
 .balance{
-background:#1e293b;
-padding:8px 14px;
-border-radius:6px;
+font-size:18px;
 }
+
+/* LAYOUT */
 
 .container{
 display:flex;
 height:calc(100vh - 60px);
 }
 
-.chart-area{
+/* CHART */
+
+.chart-section{
 flex:3;
+padding:20px;
 }
+
+#chart{
+height:100%;
+}
+
+/* TRADE PANEL */
 
 .trade-panel{
 flex:1;
-background:#020617;
+background:#050a1c;
+border-left:1px solid #1f2937;
 padding:20px;
-border-left:1px solid #1e293b;
+display:flex;
+flex-direction:column;
 }
 
-label{
-display:block;
-margin-top:15px;
-margin-bottom:5px;
+.trade-panel h2{
+margin-bottom:20px;
 }
 
-input,select{
+.input{
 width:100%;
-padding:10px;
-border:none;
-border-radius:6px;
-background:#1e293b;
+padding:12px;
+margin-bottom:15px;
+font-size:18px;
+background:#0b1020;
+border:1px solid #1f2937;
 color:white;
 }
 
-button{
-width:100%;
-padding:14px;
-margin-top:15px;
-font-size:16px;
+/* BUTTONS */
+
+.btn{
+padding:15px;
+font-size:18px;
 border:none;
-border-radius:6px;
 cursor:pointer;
+margin-bottom:10px;
 }
 
 .buy{
 background:#16a34a;
+color:white;
 }
 
 .sell{
 background:#dc2626;
+color:white;
 }
 
+/* HISTORY */
+
 .history{
-margin-top:20px;
+margin-top:30px;
+flex:1;
+overflow:auto;
+}
+
+.history-item{
+padding:10px;
+border-bottom:1px solid #1f2937;
 font-size:14px;
 }
 
-.trade-item{
-background:#1e293b;
-padding:8px;
-margin-top:5px;
-border-radius:5px;
+.green{
+color:#22c55e;
 }
 
-@media (max-width:900px){
-
-.container{
-flex-direction:column;
-height:auto;
+.red{
+color:#ef4444;
 }
 
-.chart-area{
-height:60vh;
-}
+/* SYMBOL SELECT */
 
-.trade-panel{
+.symbols{
+margin-bottom:15px;
+padding:10px;
 width:100%;
-}
-
+background:#0b1020;
+color:white;
+border:1px solid #1f2937;
 }
 
 </style>
@@ -126,54 +148,45 @@ width:100%;
 <div class="logo">NovaTrade</div>
 
 <div class="balance">
-Balance: $<span id="balance">1000</span>
+Balance: $<span id="balance">10000</span>
 </div>
 
 </header>
 
 <div class="container">
 
-<div class="chart-area">
+<!-- CHART -->
 
-<div id="tradingview_chart" style="height:100%;"></div>
+<div class="chart-section">
+
+<select class="symbols" id="symbolSelect" onchange="changeSymbol()">
+
+<option value="BINANCE:BTCUSDT">BTC / USDT</option>
+<option value="BINANCE:ETHUSDT">ETH / USDT</option>
+<option value="BINANCE:SOLUSDT">SOL / USDT</option>
+<option value="BINANCE:BNBUSDT">BNB / USDT</option>
+
+</select>
+
+<div id="chart"></div>
 
 </div>
 
+<!-- TRADE PANEL -->
+
 <div class="trade-panel">
 
-<label>Asset</label>
+<h2>Trade</h2>
 
-<select id="asset">
-<option>BTCUSDT</option>
-<option>ETHUSDT</option>
-<option>EURUSD</option>
-<option>GBPUSD</option>
-</select>
+<input class="input" id="amount" type="number" value="100">
 
-<label>Amount ($)</label>
+<button class="btn buy" onclick="buyTrade()">BUY</button>
 
-<input type="number" id="amount" value="10">
-
-<label>Time</label>
-
-<select id="time">
-<option value="5">5 sec</option>
-<option value="10">10 sec</option>
-<option value="30">30 sec</option>
-<option value="60">1 min</option>
-</select>
-
-<button class="buy" onclick="trade('buy')">
-BUY ↑
-</button>
-
-<button class="sell" onclick="trade('sell')">
-SELL ↓
-</button>
+<button class="btn sell" onclick="sellTrade()">SELL</button>
 
 <div class="history" id="history">
 
-Trade History
+<h3>Trade History</h3>
 
 </div>
 
@@ -183,63 +196,93 @@ Trade History
 
 <script>
 
-new TradingView.widget({
-"width": "100%",
-"height": "100%",
-"symbol": "BINANCE:BTCUSDT",
-"interval": "1",
-"timezone": "Etc/UTC",
-"theme": "dark",
-"style": "1",
-"locale": "en",
-"toolbar_bg": "#0f172a",
-"container_id": "tradingview_chart"
-});
+let balance = 10000
+let widget
 
-let balance = 1000;
+function loadChart(symbol){
 
-function trade(type){
+document.getElementById("chart").innerHTML=""
 
-let amount = parseFloat(document.getElementById("amount").value);
-let time = document.getElementById("time").value;
+widget = new TradingView.widget({
 
-if(amount > balance){
-alert("Not enough balance");
-return;
-}
+container_id:"chart",
+width:"100%",
+height:"100%",
+symbol:symbol,
+interval:"1",
+timezone:"Etc/UTC",
+theme:"dark",
+style:"1",
+locale:"en",
+toolbar_bg:"#0b1020",
+enable_publishing:false,
+allow_symbol_change:true
 
-balance -= amount;
-
-document.getElementById("balance").innerText = balance;
-
-let item = document.createElement("div");
-item.className="trade-item";
-
-item.innerText = type.toUpperCase()+" $"+amount+" ("+time+"s)";
-
-document.getElementById("history").appendChild(item);
-
-setTimeout(()=>{
-
-let win = Math.random() > 0.5;
-
-if(win){
-
-let profit = amount * 1.8;
-
-balance += profit;
-
-alert("WIN +$"+profit);
-
-}else{
-
-alert("LOSE -$"+amount);
+})
 
 }
 
-document.getElementById("balance").innerText = balance;
+loadChart("BINANCE:BTCUSDT")
 
-}, time*1000);
+function changeSymbol(){
+
+let symbol = document.getElementById("symbolSelect").value
+
+loadChart(symbol)
+
+}
+
+function buyTrade(){
+
+let amount = Number(document.getElementById("amount").value)
+
+if(amount>balance){
+
+alert("Not enough balance")
+
+return
+
+}
+
+balance -= amount
+
+updateBalance()
+
+addHistory("BUY",amount)
+
+}
+
+function sellTrade(){
+
+let amount = Number(document.getElementById("amount").value)
+
+balance += amount
+
+updateBalance()
+
+addHistory("SELL",amount)
+
+}
+
+function updateBalance(){
+
+document.getElementById("balance").innerText = balance.toFixed(2)
+
+}
+
+function addHistory(type,amount){
+
+let history = document.getElementById("history")
+
+let item = document.createElement("div")
+
+item.className="history-item"
+
+let color = type=="BUY" ? "green" : "red"
+
+item.innerHTML = `<span class="${color}">${type}</span> $${amount}`
+
+history.appendChild(item)
 
 }
 
